@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<script>
+    "use strict";
+    var _targetFrame;
+    var _targetOrigin = ''; //targetOrigin = "*";
+    // var _URL = getServerUrl();
+    // var guid = tokenGeneration();
+    //var _URLAccounts = "/start.swe?SWECmd=GotoView&SWEView=Vector+Account+Search+View&SWERF=1&SWEBU=1&SWEApplet0=Vector+Account+Details+FL+DSB+Form+Applet&SWERowId0="
+    var VectorReply = {
+        sentts: '',
+        rects: '',
+        data: ''
+    };
+    const maxretries = 12;
+    const retryinterval = 5000;
+
+    // function getServerUrl() {
+    //     var url = "";
+    //     for (var i = 0; i < document.scripts.length; i++) {
+    //         if (document.scripts[i].src.indexOf('/vccscreens.') > 0) {
+    //             var src = document.scripts[i].src;
+    //             url = src.substring(0, src.indexOf('/siebel/scripts') + 1);
+    //             _targetOrigin = url;
+    //             //_targetOrigin = src.substring(0, src.lastIndexOf('/siebel/app/callcenterVCC/enu') );
+    //             return url;
+    //         }
+    //     }
+    //     return url;
+    // }
+
+
+    var Navigate = {
+        name: "Vector",
+        openWindow: function (view, AccountNum, IsAuth, ANI, DeviceNum, InvNum, NoticeNum, NoticeSeq, ActivityId, ContactId) {
+            var _FullURL = "";
+            var data = new Object();
+            data.view = window.location.href.split("#")[2]?.split("=")[1];
+            data.AccountNum = window.location.href.split("#")[1]?.split("=")[1];
+            // data.AccountNum = AccountNum;
+            data.IsAuth = IsAuth;
+            data.ANI = ANI;
+            data.DeviceNum = DeviceNum;
+            data.InvNum = InvNum;
+            data.NoticeNum = NoticeNum;
+            data.NoticeSeq = NoticeSeq;
+            data.ActivityId = ActivityId;
+            data.ContactId = ContactId;
+            var _GotoViewName = data.view;
+            var strWindowFeatures = "height=700,width=1300,status=1, resizable=yes, scrollbars=yes, titlebar=yes, menubar=yes";
+            var _currentFrame;
+            var NeedsLogin = false;
+            async function initNewWindow() {
+                let guid = await tokenGeneration()
+                // _FullURL = _URL + "siebel/app/callcenter/enu" + "?SWECmd=Login";
+                // _currentFrame = window.open(_FullURL, "Siebel", strWindowFeatures);
+                // _currentFrame = window.open("https://ctsgtolling-test.crm.dynamics.com/main.aspx?appid=d2658abe-f87d-454e-95df-c31e884f4911&pagetype=entitylist&etn=vector_vehicleclass&viewid=a81b970f-7778-4321-b2b7-3641ca4f0002&viewType=1039");
+                // if (!_currentFrame || _currentFrame.closed || typeof _currentFrame.closed == 'undefined') {
+                //     alert("Pop-up Blocker is enabled! Please add this site to your exception list."); return false;
+                // }
+                // if (_currentFrame != _targetFrame) _targetFrame = _currentFrame; window.parent._targetFrame = _targetFrame;
+                // NeedsLogin = true;
+            }
+
+            initNewWindow();
+            async function tokenGeneration() {
+
+                var myHeaders = new Headers();
+                myHeaders.append("Content-Type", "application/x-www-form-urlencoded");
+                myHeaders.append("Cookie", "fpc=Ahik5L2TZX9CuQvmE8MY-RJnSyrVAQAAAGdON9sOAAAA; stsservicecookie=estsfd; x-ms-gateway-slice=estsfd");
+
+                var urlencoded = new URLSearchParams();
+                urlencoded.append("client_id", "5c95c003-b26a-4f6f-8afa-26e953ce822b");
+                urlencoded.append("client_secret", "mKZ8Q~8l5EwkE3hmUF-b0cEP3n~tNE5TBwi5RdrZ");
+                urlencoded.append("grant_type", "client_credentials");
+                urlencoded.append("resource", "https://ctsgtolling-test.crm.dynamics.com");
+
+                var requestOptions = {
+                    method: 'POST',
+                    headers: myHeaders,
+                    body: urlencoded,
+                    redirect: 'follow'
+                };
+
+                fetch("https://api-ss-qa-tollingbos.services.conduent.com/CRM/oauth2/token", requestOptions)
+                    .then(response => response.text())
+                    .then(result => {
+                        let token = JSON.parse(result).access_token
+                        console.log("CAMS_TOKEN", JSON.parse(result));
+
+                        let myHeaders = new Headers();
+                        myHeaders.append("Authorization", "Bearer " + token);
+                        myHeaders.append("Content-Type", "application/json");
+                        myHeaders.append("Cookie", "CrmOwinAuth=MAAAALAzXSZScRHtlO8ADTqPV4C6OEFC8C6EHKvAI020d0NZBEvGzGGrLwB25uQB2-tAux-LCAAAAAAABAC9WNmO28gV7Z5ueOxJZhBgAD_FQD_4IUGGEvelEWPCRQtFLdQu9QtRJIuruIjFVR-Y7wrldjvjwSRILCUFqVAkq84999bV5Snd3dzc_DCr_FhOktCHYpF7tze3Nw_t7TtQ2O_x58Zh5_65s15GL-325oOX5yl67HZRjjotmJ1UqBPDvGsLDGlbBMRIAhIYTeIkZnIcgVkCDXnThgLk6e7tzZ2P0KUYl3MA-XcEy9IMRZI4cT9azqYXY8amc3VMWKefMFniSpivwSFH0PLtH5nHRwLHKRLHSYISFFpmr7C9j-f15-WWByOAOpFvZQlKnLxjJVHXOgA_Ql3Qpl4cwdxLbJRBB2YwtiC6Syv7cgKTf0ugQt3WX76Ls13fhnHu580vSZ3vWCD3k9iPUQ7iz1lCC_RVov_KMjyAvLeqTMpEQhuFKwKVLTcHDxZpdbn30q-8r6MDSkDaSTL3k-9Mt_382vd2rn8Atp1BhN5pqCN7ILazligMQfY3K4ntol1wjuDlFD98HUVUZDGI4PdfULuczc9fx8b1Sxif-XyjoeuH5Muc_bXtl-s0S8p2nP1L6wSANs3wPGbyFsRoCvAY4DgGE3iBoXjHpnCbv0I1feWn59T5gSC4DiEIHZJiOgR7Oe79Ob5__GK_f3rQ0MOfenUO22Q4_Pn_HfnEDKCVP991fJi9d2gOCLwN2rgCAaNZYGImRXIYb-MkB3GBslnyCoFIC9_-w-dazdEEwSvS5bjfZB6Ld8QFEod5vSRhzxNDjbKsw8wXWOiJlvjSqs8j0RQltXO57d8j322LrNFW2RzehxHyL8dUvu63fE6zf-7pX8LhgQr2G3bAq0lTh_rSKoVdnC1dyPFUHFnhoRcPR2TAAvdyysx_lX85jNt3km-__0_QLyd3e_O_fhfcFbn_VjHwEJs6oREORniwOHIBroriFcBLmN0RnSuImvvKt9F7gjJtwuJIjHVogNG25bSVlHEwgrcpk8cdEufB5bZe1xEyotTyX5GM0KbsVWTHt2fQFvOeYq-E-JFmhfz8nuCvBPk2aRd1rCzqnKVYnoRtmjUp_I0jy-3Nm9a83cRGlv_9zdeVMNEVJVHstZcKhiljkdrMuHlm2-7I5bawzERXaR2ci4JuaFF8orwE5wNghssn3WZm83Kzy44uM9WVuSv5KpYcsny5SjCLcoeSlc22M77cP2VHXlgz68AeS7x-JEMPn8AsZNknYbGQZvLeW1TTZMtjxsrQdF0Ll35K93ciyDg6KiO68pwgQzIxBhleepqg1XsB752WuOw2Mit5dtlj1xQ52gM-tUf2Ru1paIXvmsUGLxYbIPeCYYk0HQW5Lh9XGOQkLWX5wX53zKP9qGTVRO0F1tTTRTkqiCmPo1lD9mPMkjQ6HdZSc1w58eAYUpTm1Xs-xIl1XFvkSBbqpydjwJzmE10YlLveOrUSSS9GfX-zZ410boZP4U6oiNQDx3haQ1YylPFpj-_1aH-Mt5JD6ad81PAnmXFm1tgr7EHgKzPPBVtJl7ADHSvKuOGMp1lzGB1PwxobCE8aVdvSZEdMGUo00S60SX0cjzlGA091k_l2rQjblTJt-puDHvTX6XyjDdNCmY-BOlr5fLrtLwYTVE4n_VyujcJUUzAtFBKXdB6eBuSKzOdjG0EfOPhIcHeaONml2OSIaRKpMVWxGutzr5llKhqzTs-fs6HcL9B8EPPCeLUwrRVYCySNFdKwLp-AHsPRXJoHY9uwjCE91IvIGg0mgyriK4S5jsImlbI9jphDPApYFva93tNiqJN5H9RMVWIDUTIcbNDTXFlQa9SYLF5TCrbb7esg4NU8zdmVIeUntD0M4nFVY3C9dxVjPCjNRTPCxv5U1Ods79B3DOsoZ3uHHkFaNMyhGiq9sTIcJpuQxHpNn48HM35o8HVi0dPVSQ23sXfc-1wcequmPE6gdEgXyurY9FsrKhFnOBLWW2wsLEpl65AKthzM9GBjruueq1f5-uRscE2hwJLvZ2kFkL4wSCBTXrDMJ339iAhxqXPiQo2UQNwOhYV52vEGU010lYiOK4i4KLJEu5rUqq66VbSaKiJW-T6brfcrZ-lZSk8cWva0WsuQX9sBZh5gUw_UKjKYgAxNacIqRIkD2zmRMae53khRjiYqpWJeCsy8ryZIDYVq7m2jvJob1lR2R97am27i0xLF5Q5x9mBSTOgBzNfj1SgigmABlvNZ5E9nq01mKNFWn_nNdjWIycxXUWBxVEkQezfy5Cm7mNJCRDdGGjcLS6mFRaNvtfm4mTuqJyOL3ru74cSrsIUgt0k3V1wvhKCH18KefK5r332qa2728ejJURyF48KXzw6_8ezczv2r9vumk0Hbz1ql2nupyFaO3Dw5HPzYxXKI8o9VtsUCrd5AH6VGewCMOwCl9c8I5nk7DyXxofmQZwX8voPaY2F7Jl6etdp7mqZxBockBiDgMJq28HbUni8s3CRwQJi2KVA_dlo9Y4XL53VqP2sl1l9fyBwSt7X1Wem0dvwYPv89kERREneTc_0nux8hPpn-XSeFGfJRq4Dym9cdWKetg-jdyit-eqDwhyVMH8hWHj8Q-CPOP5LUw2Cy-rbjI1RA-10_838xi_xy1j8AenBc8xYTAAA; ARRAffinity=2f10c6d566644f6d5649b31e2213a8f0715fd6d7e855028db287989b6ac0968af0c5f833986bdce6f0620296d9df9a63cb0cacda0e0b81911d847074e575354f08DAE4BAB5F038862091499032; ReqClientId=0612242e-3499-49d1-be3f-fa1e00a9ac65; orgId=c94dca5c-8779-4ebc-97cd-cbcc56ff2336");
+                        let raw = JSON.stringify({
+                            "accountNumber": data.AccountNum,
+                            "ProvideAccountVehicles": true,
+                            "ProvideAccountAddresses": true,
+                            "ProvideAccountDetails": true,
+                            "ProvideAccountContacts": true,
+                            "ProvideAccountPlan": true,
+                            "ProvideAccountDevice": true,
+                            "ProvideAccountRelenishment": true,
+                            "ProvideAccountCorrespondence": true,
+                            "ProvideConversionInfo": true,
+                            "accountGuid": ""
+                        });
+
+                        let requestOptions = {
+                            method: 'POST',
+                            headers: myHeaders,
+                            body: raw,
+                            redirect: 'follow'
+                        };
+
+                        fetch("https://ctsgtolling-test.api.crm.dynamics.com/api/data/v9.2/vector_Account360Information", requestOptions)
+                            .then(response => response.text())
+                            .then(result => {
+                                let dataResult = JSON.parse(result)
+                                localStorage.setItem("setLocalAccountID", dataResult.information[0].accountID)
+                                if (data.view == "summery") {
+                                    _currentFrame = window.open("https://ctsgtolling-test.crm.dynamics.com/main.aspx?appid=a17ad3c8-2632-4e8b-9dc0-b6f225fbd70c&pagetype=entityrecord&etn=account&id=" + dataResult.information[0].accountID, "Siebel", strWindowFeatures);
+                                } else if (data.view == "device") {
+                                    _currentFrame = window.open("https://ctsgtolling-test.crm.dynamics.com/main.aspx?appid=a17ad3c8-2632-4e8b-9dc0-b6f225fbd70c&pagetype=webresource&webresourceName=new_Trasponders&Data=" + dataResult.information[0].accountID, "Siebel", strWindowFeatures);
+                                } else if (data.view == "invoice") {
+                                    _currentFrame = window.open("https://ctsgtolling-test.crm.dynamics.com/main.aspx?appid=a17ad3c8-2632-4e8b-9dc0-b6f225fbd70c&pagetype=webresource&webresourceName=new_Wizard_Invoices&Data=" + dataResult.information[0].accountID, "Siebel", strWindowFeatures);
+                                } else {
+                                    _currentFrame = window.open("https://ctsgtolling-test.crm.dynamics.com/main.aspx?appid=a17ad3c8-2632-4e8b-9dc0-b6f225fbd70c&pagetype=entityrecord&etn=account&id=" + dataResult.information[0].accountID, "Siebel", strWindowFeatures);
+                                }
+                                if (!_currentFrame || _currentFrame.closed || typeof _currentFrame.closed == 'undefined') {
+                                    alert("Pop-up Blocker is enabled! Please add this site to your exception list."); return false;
+                                }
+                                debugger
+                                sessionStorage.setItem("setLocalAccountID", dataResult.information[0].accountID)
+                            })
+                            .catch(error => console.log('error', error));
+                    })
+                    .catch(error => console.log('error', error));
+            }
+
+            if (window.parent._targetFrame == undefined) {
+                initNewWindow();
+            }
+            else if (window.parent._targetFrame.closed) {
+                initNewWindow();
+            } else _targetFrame = window.parent._targetFrame;
+
+            switch (data.view.toUpperCase()) {
+                case "LOGIN": { initNewWindow(); break; }
+                default: _FullURL = _URL; break;
+            }
+
+        },
+        Login: function () {
+            Navigate.openWindow("Login");
+        }
+    };
+                // 500135554
+                // 200003903 
+</script>
+<script>Navigate.openWindow("CTI_ACTIVITY", "500135554", "Y", "5859999999", "00400400007", "17000209052", "T217000178091", "", "1-2637OD6", "1223456");</script>
+
+</html>
